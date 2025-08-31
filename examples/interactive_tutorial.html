@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js - Interactive Tutorial</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link type="text/css" rel="stylesheet" href="main.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+            margin: 0;
+        }
+        #sidebar {
+            width: 250px;
+            padding: 20px;
+            background: #f0f0f0;
+            overflow-y: auto;
+            border-right: 1px solid #ccc;
+        }
+        #sidebar h2 {
+            margin-top: 0;
+        }
+        #sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        #sidebar li {
+            padding: 8px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        #sidebar li:hover {
+            background: #ddd;
+        }
+        #sidebar li.active {
+            font-weight: bold;
+            background-color: #049ef4;
+            color: white;
+        }
+        #content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        #scene-container {
+            flex-grow: 1;
+            position: relative;
+        }
+        #info {
+            height: 40%;
+            padding: 20px;
+            background: #fafafa;
+            overflow-y: auto;
+            border-top: 1px solid #ccc;
+        }
+        #code-container {
+            white-space: pre-wrap;
+            background: #eee;
+            padding: 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Tutorial Steps</h2>
+        <ul>
+            <li id="step1" class="active">1. The Scene</li>
+            <li id="step2">2. Your First Object</li>
+            <li id="step3">3. Lighting</li>
+            <li id="step4">4. Animation</li>
+            <li id="step5">5. User Interaction</li>
+            <li id="step6">6. Loading a Model</li>
+            <li id="step7">7. Post-processing</li>
+        </ul>
+    </div>
+
+    <div id="content">
+        <div id="scene-container"></div>
+        <div id="info">
+            <h3 id="step-title"></h3>
+            <p id="step-explanation"></p>
+            <div id="code-container">
+                <pre><code id="code" class="language-javascript"></code></pre>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "../build/three.module.js",
+                "three/addons/": "./jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { BloomPass } from 'three/addons/postprocessing/BloomPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+
+        let scene, camera, renderer, cube, model, composer, controls;
+        let currentStep = 0;
+
+        const stepsData = [
+            {
+                title: "Step 1: The Scene",
+                explanation: "Every three.js application needs a scene, a camera, and a renderer. The scene contains all your objects, lights, and cameras. The camera is what you look through to see the scene. The renderer draws the output.",
+                code: `
+// Set a background color
+scene.background = new THREE.Color(0x111111);
+
+// The scene, camera, and renderer are created for you in the boilerplate.
+// camera.position.z = 5;
+                `,
+                setup: (scene) => {
+                    scene.background = new THREE.Color(0x111111);
+                }
+            },
+            {
+                title: "Step 2: Your First Object",
+                explanation: "To create a visible object, you need a Geometry (the shape) and a Material (the skin). You combine these into a Mesh, which you can then add to the scene. MeshNormalMaterial is great for debugging as it shows the direction of the surface normals and doesn't require any lights.",
+                code: `
+const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+const material = new THREE.MeshNormalMaterial();
+cube = new THREE.Mesh(geometry, material);
+scene.add(cube);
+                `,
+                setup: (scene) => {
+                    scene.background = new THREE.Color(0x111111);
+                    const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+                    const material = new THREE.MeshNormalMaterial();
+                    cube = new THREE.Mesh(geometry, material);
+                    scene.add(cube);
+                }
+            },
+            {
+                title: "Step 3: Lighting",
+                explanation: "Most materials need light to be visible. Let's switch to a MeshStandardMaterial, which is a physically-based material, and add an AmbientLight (for general color) and a DirectionalLight (like the sun).",
+                code: `
+const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+const material = new THREE.MeshStandardMaterial({
+    color: 0x049ef4,
+    roughness: 0.4,
+    metalness: 0.6
+});
+cube = new THREE.Mesh(geometry, material);
+scene.add(cube);
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+directionalLight.position.set(5, 5, 5);
+scene.add(directionalLight);
+                `,
+                setup: (scene) => {
+                    scene.background = new THREE.Color(0x111111);
+                    const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+                    const material = new THREE.MeshStandardMaterial({ color: 0x049ef4, roughness: 0.4, metalness: 0.6 });
+                    cube = new THREE.Mesh(geometry, material);
+                    scene.add(cube);
+
+                    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                    scene.add(ambientLight);
+
+                    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+                    directionalLight.position.set(5, 5, 5);
+                    scene.add(directionalLight);
+                }
+            },
+            {
+                title: "Step 4: Animation",
+                explanation: "To make things move, you use the 'animate' loop, which is called on every frame thanks to requestAnimationFrame. We can update the cube's rotation inside this loop.",
+                code: `
+// This function will be called on every frame
+function stepAnimate() {
+    if (cube) {
+        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.01;
+    }
+}
+                `,
+                setup: (scene) => {
+                    scene.background = new THREE.Color(0x111111);
+                    const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+                    const material = new THREE.MeshStandardMaterial({ color: 0x049ef4, roughness: 0.4, metalness: 0.6 });
+                    cube = new THREE.Mesh(geometry, material);
+                    scene.add(cube);
+
+                    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                    scene.add(ambientLight);
+
+                    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+                    directionalLight.position.set(5, 5, 5);
+                    scene.add(directionalLight);
+                },
+                animate: () => {
+                    if (cube) {
+                        cube.rotation.x += 0.005;
+                        cube.rotation.y += 0.005;
+                    }
+                }
+            },
+            {
+                title: "Step 5: User Interaction",
+                explanation: "Let's add camera controls so you can orbit around the scene, zoom, and pan. We'll use OrbitControls from the addons library. Remember to update the controls in the animation loop.",
+                code: `
+// Import OrbitControls at the top of your script
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ... in setup
+controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; // For a smoother feel
+
+// ... in animate loop
+if (controls) {
+    controls.update(); // only required if enableDamping is true
+}
+                `,
+                setup: (scene, camera, renderer) => {
+                    scene.background = new THREE.Color(0x111111);
+                    const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+                    const material = new THREE.MeshStandardMaterial({ color: 0x049ef4, roughness: 0.4, metalness: 0.6 });
+                    cube = new THREE.Mesh(geometry, material);
+                    scene.add(cube);
+
+                    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                    scene.add(ambientLight);
+
+                    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+                    directionalLight.position.set(5, 5, 5);
+                    scene.add(directionalLight);
+
+                    controls = new OrbitControls(camera, renderer.domElement);
+                    controls.enableDamping = true;
+                },
+                animate: () => {
+                    if (cube) {
+                        cube.rotation.x += 0.005;
+                        cube.rotation.y += 0.005;
+                    }
+                    if (controls) {
+                        controls.update();
+                    }
+                }
+            },
+            {
+                title: "Step 6: Loading a Model",
+                explanation: "You can load 3D models created in external software (like Blender). GLTF is the recommended format for the web. We will use the GLTFLoader to load the famous duck model.",
+                code: `
+// Import GLTFLoader
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const loader = new GLTFLoader();
+loader.load(
+    './models/gltf/Duck.glb', // path to your model
+    (gltf) => {
+        model = gltf.scene;
+        model.position.y = -1;
+        scene.add(model);
+    }
+);
+                `,
+                setup: (scene, camera, renderer) => {
+                    scene.background = new THREE.Color(0x87CEEB); // Sky blue
+
+                    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+                    scene.add(ambientLight);
+
+                    const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+                    directionalLight.position.set(10, 10, 10);
+                    scene.add(directionalLight);
+
+                    controls = new OrbitControls(camera, renderer.domElement);
+                    controls.enableDamping = true;
+                    camera.position.set(0, 2, 8);
+                    controls.target.set(0, 1, 0);
+
+                    const loader = new GLTFLoader();
+                    loader.load('./models/gltf/Duck.glb', (gltf) => {
+                        model = gltf.scene;
+                        model.position.y = -1;
+                        scene.add(model);
+                    });
+                },
+                animate: () => {
+                    if (controls) {
+                        controls.update();
+                    }
+                }
+            },
+            {
+                title: "Step 7: Post-processing",
+                explanation: "Post-processing allows you to add effects on top of your rendered scene. We'll use an EffectComposer and add an UnrealBloomPass for a nice glow effect. Note that we need to render through the composer now.",
+                code: `
+// Import necessary modules
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+composer = new EffectComposer(renderer);
+const renderPass = new RenderPass(scene, camera);
+composer.addPass(renderPass);
+
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.5, 0.2);
+composer.addPass(bloomPass);
+
+// In animate loop, call composer.render() instead of renderer.render()
+                `,
+                setup: (scene, camera, renderer) => {
+                    scene.background = new THREE.Color(0x111111);
+                    renderer.toneMapping = THREE.ReinhardToneMapping;
+
+                    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+                    scene.add(ambientLight);
+
+                    const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+                    directionalLight.position.set(10, 10, 10);
+                    scene.add(directionalLight);
+
+                    controls = new OrbitControls(camera, renderer.domElement);
+                    controls.enableDamping = true;
+                    camera.position.set(0, 2, 8);
+                    controls.target.set(0, 1, 0);
+
+                    const loader = new GLTFLoader();
+                    loader.load('./models/gltf/Duck.glb', (gltf) => {
+                        model = gltf.scene;
+                        model.position.y = -1;
+                        scene.add(model);
+                    });
+
+                    composer = new EffectComposer(renderer);
+                    const renderPass = new RenderPass(scene, camera);
+                    composer.addPass(renderPass);
+
+                    const bloomPass = new UnrealBloomPass(new THREE.Vector2(container.clientWidth, container.clientHeight), 1.2, 0.5, 0.2);
+                    composer.addPass(bloomPass);
+                },
+                animate: () => {
+                    if (controls) {
+                        controls.update();
+                    }
+                }
+            }
+        ];
+
+        const container = document.getElementById('scene-container');
+
+        function init() {
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            scene = new THREE.Scene();
+
+            camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
+            camera.position.z = 5;
+
+            window.addEventListener('resize', onWindowResize);
+            onWindowResize();
+
+            document.querySelectorAll('#sidebar li').forEach(li => {
+                li.addEventListener('click', () => {
+                    const newStep = parseInt(li.id.replace('step', ''));
+                    if (newStep !== currentStep) {
+                        goToStep(newStep);
+                    }
+                });
+            });
+
+            // Defer the first step initialization to ensure the DOM is fully ready
+            setTimeout(() => goToStep(1), 0);
+
+            animate();
+        }
+
+        function onWindowResize() {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            if (composer) {
+                composer.setSize(container.clientWidth, container.clientHeight);
+            }
+        }
+
+        function clearScene() {
+            while (scene.children.length > 0) {
+                const object = scene.children[0];
+                if (object.geometry) object.geometry.dispose();
+                if (object.material) {
+                    if (Array.isArray(object.material)) {
+                        for (const material of object.material) material.dispose();
+                    } else {
+                        object.material.dispose();
+                    }
+                }
+                scene.remove(object);
+            }
+
+            scene.background = null;
+            scene.environment = null;
+
+            if (controls) {
+                controls.dispose();
+                controls = null;
+            }
+
+            if (composer) {
+                composer.dispose();
+                composer = null;
+            }
+
+            cube = null;
+            model = null;
+        }
+
+        function goToStep(step) {
+            if (stepsData.length === 0) {
+                // Temporary message until steps are implemented
+                document.getElementById('step-title').textContent = 'Loading...';
+                document.getElementById('step-explanation').textContent = 'The tutorial steps are being implemented.';
+                document.getElementById('code').textContent = '// Please wait';
+                return;
+            }
+
+            currentStep = step;
+            clearScene();
+
+            // Update UI
+            document.querySelectorAll('#sidebar li').forEach(li => li.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+
+            const stepData = stepsData[step - 1] || { title: 'Coming Soon', explanation: 'This step is not yet implemented.', code: '' };
+            document.getElementById('step-title').textContent = stepData.title;
+            document.getElementById('step-explanation').textContent = stepData.explanation;
+            document.getElementById('code').textContent = stepData.code.trim();
+
+
+            // Setup scene for the current step
+            stepData.setup(scene, camera, renderer);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (currentStep > 0 && stepsData[currentStep - 1] && stepsData[currentStep - 1].animate) {
+                 stepsData[currentStep - 1].animate();
+            }
+
+            if (composer) {
+                composer.render();
+            } else {
+                renderer.render(scene, camera);
+            }
+        }
+
+        init();
+
+    </script>
+
+</body>
+</html>

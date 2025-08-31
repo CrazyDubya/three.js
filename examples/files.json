@@ -1,5 +1,6 @@
 {
 	"webgl": [
+		"interactive_tutorial",
 		"webgl_animation_keyframes",
 		"webgl_animation_skinning_blending",
 		"webgl_animation_skinning_additive_blending",

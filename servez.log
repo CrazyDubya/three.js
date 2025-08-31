@@ -1,0 +1,10 @@
+
+> three@0.179.1 dev
+> node utils/build/dev.js && servez -p 8080
+
+server started on ::8080 for path: /app
+available on:
+   http://localhost:8080
+   http://127.0.0.1:8080
+   http://192.168.0.2:8080
+press CTRL-C to stop the server.
